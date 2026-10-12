@@ -1,0 +1,6 @@
+- [x] Replace browser-only patient registration with authenticated account creation and private Lovable Cloud profile saving.
+- [x] Scaffold ignored local development settings and a separate production environment template for later credentials.
+- [x] Grant Ayush admin access after verifying the registered email account.
+- [x] Add role-checked Admin reports for account and patient-profile activity across selectable timelines, with CSV export and transparent limits for unsaved appointment/report activity.
+- [x] Build private patient messaging with inbox notifications, patient and Admin recipients, searchable directory plus email lookup, and phone visibility only for Admin while composing.
+- [ ] Enable email alerts for messages after the project sender domain is configured and verified.
