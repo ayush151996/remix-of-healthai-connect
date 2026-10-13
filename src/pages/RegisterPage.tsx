@@ -39,18 +39,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [authMode, setAuthMode] = useState<"signup" | "signin">(() => new URLSearchParams(window.location.search).get("mode") === "signin" ? "signin" : "signup");
   const [confirmationPending, setConfirmationPending] = useState(false);
-  const [resetMode] = useState(() => window.location.pathname === "/reset-password" || new URLSearchParams(window.location.search).get("mode") === "reset");
-  const [recoveryReady, setRecoveryReady] = useState(false);
-  const [resetEmailSent, setResetEmailSent] = useState(false);
-  const hasRecoveryHash = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type") === "recovery";
+  const [resetMode, setResetMode] = useState(() => new URLSearchParams(window.location.search).get("mode") === "reset");
 
   const update = (field: keyof ProfileForm, value: string) => setForm((previous) => ({ ...previous, [field]: value }));
 
   useEffect(() => {
     let active = true;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (active && event === "PASSWORD_RECOVERY" && session?.user) setRecoveryReady(true);
-    });
     const loadAccount = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (!active) return;
@@ -60,7 +54,6 @@ export default function RegisterPage() {
         return;
       }
       const user = session?.user;
-      if (resetMode && hasRecoveryHash && user) setRecoveryReady(true);
       setSignedInEmail(user?.email ?? null);
       if (user?.email) setAccountEmail(user.email);
       if (user) {
@@ -92,8 +85,8 @@ export default function RegisterPage() {
       setCheckingAccount(false);
     };
     void loadAccount();
-    return () => { active = false; subscription.unsubscribe(); };
-  }, [hasRecoveryHash, resetMode]);
+    return () => { active = false; };
+  }, []);
 
   const handleAccountSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -198,11 +191,11 @@ export default function RegisterPage() {
     }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(accountEmail.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/register?mode=reset`,
     });
     if (error) toast.error(error.message);
     else {
-      setResetEmailSent(true);
+      setResetMode(true);
       toast.success("Password reset instructions have been emailed to you.");
     }
     setLoading(false);
@@ -218,10 +211,10 @@ export default function RegisterPage() {
       return;
     }
     setPassword("");
-    setRecoveryReady(false);
+    setResetMode(false);
     setSignedInEmail(data.user.email ?? accountEmail.trim());
-    navigate("/register?mode=signin", { replace: true });
-    toast.success("Your password has been updated. Sign in with your email and new password.");
+    navigate("/register", { replace: true });
+    toast.success("Your password has been updated. Complete your health profile below.");
     setLoading(false);
   };
 
@@ -233,25 +226,7 @@ export default function RegisterPage() {
           <p className="text-muted-foreground text-sm">Your health profile is saved securely to your account.</p>
         </div>
 
-        {resetMode ? (
-          <div className="health-card space-y-4">
-            <div>
-              <h2 className="font-display font-semibold text-lg">Set a new password</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {recoveryReady ? "Choose a new password for your account." : "Open the latest password-reset link from your email to continue."}
-              </p>
-            </div>
-            {recoveryReady ? (
-              <form onSubmit={handlePasswordReset} className="space-y-4">
-                <div className="space-y-1.5"><Label htmlFor="new-password">New password</Label><Input id="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" /></div>
-                <Button type="submit" className="w-full" disabled={loading}>{loading ? "Updating…" : "Update Password"}</Button>
-              </form>
-            ) : (
-              <Button type="button" variant="outline" onClick={() => navigate("/register?mode=signin", { replace: true })}>Return to sign in</Button>
-            )}
-            <Disclaimer />
-          </div>
-        ) : checkingAccount ? (
+        {checkingAccount ? (
           <div className="health-card text-sm text-muted-foreground" role="status">Checking your account…</div>
         ) : signedInEmail ? (
           <form onSubmit={handleProfileSubmit} className="space-y-6">
@@ -318,7 +293,12 @@ export default function RegisterPage() {
                   {resetMode ? "Choose a new password for your account." : confirmationPending ? "Use the link we emailed you, then sign in here to complete and save your health profile." : "An account keeps your health profile private and available on your dashboard."}
                 </p>
               </div>
-              {confirmationPending ? (
+              {resetMode ? (
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div className="space-y-1.5"><Label htmlFor="new-password">New password</Label><Input id="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" /></div>
+                  <Button type="submit" className="w-full" disabled={loading}>{loading ? "Updating…" : "Update Password"}</Button>
+                </form>
+              ) : confirmationPending ? (
                 <Button type="button" variant="outline" onClick={() => { setAuthMode("signin"); setConfirmationPending(false); }}>I confirmed my email — sign in</Button>
               ) : (
                 <form onSubmit={handleAccountSubmit} className="space-y-4">
@@ -328,11 +308,8 @@ export default function RegisterPage() {
                   <Button type="submit" className="w-full" disabled={loading}>{loading ? "Please wait…" : authMode === "signup" ? "Create Account" : "Sign In"}</Button>
                 </form>
               )}
-              {!confirmationPending && authMode === "signin" && <>
-                <Button type="button" variant="link" className="h-auto p-0" onClick={() => void requestPasswordReset()} disabled={loading}>Forgot password?</Button>
-                {resetEmailSent && <p className="text-sm text-muted-foreground" role="status">Check your inbox for a password-reset link. Open that link before choosing a new password.</p>}
-              </>}
-              {!confirmationPending && <p className="text-sm text-muted-foreground">
+              {!resetMode && !confirmationPending && authMode === "signin" && <Button type="button" variant="link" className="h-auto p-0" onClick={() => void requestPasswordReset()} disabled={loading}>Forgot password?</Button>}
+              {!resetMode && !confirmationPending && <p className="text-sm text-muted-foreground">
                 {authMode === "signup" ? "Already have an account?" : "New to MedAI?"}{" "}
                 <Button type="button" variant="link" className="h-auto p-0" onClick={() => setAuthMode(authMode === "signup" ? "signin" : "signup")}>
                   {authMode === "signup" ? "Sign in" : "Create an account"}
