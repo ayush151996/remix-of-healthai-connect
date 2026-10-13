@@ -75,6 +75,7 @@ export default function ReportAnalyzerPage() {
     try {
       extracted = await extractReport(file);
     } catch (e) {
+      if (!(e instanceof ExtractionError)) console.error("Report extraction failed:", e);
       setPhase("idle");
       setError(e instanceof ExtractionError ? e.message : "This file could not be read. Please try a different file.");
       return;
