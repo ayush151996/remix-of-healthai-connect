@@ -108,7 +108,7 @@ async function readPdf(file: File, doc: Awaited<ReturnType<typeof pdfjs.getDocum
       canvas.height = Math.round(scaled.height);
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new ExtractionError("Could not render this PDF in your browser.");
-      await page.render({ canvasContext: ctx, viewport: scaled }).promise;
+      await page.render({ canvas, canvasContext: ctx, viewport: scaled }).promise;
       images.push({ page: i, dataUrl: canvas.toDataURL("image/jpeg", 0.85) });
     }
     if (images.length === 0) {
