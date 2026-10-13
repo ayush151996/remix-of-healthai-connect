@@ -60,12 +60,21 @@ async function fileToResizedDataUrl(file: File | Blob): Promise<string> {
 
 async function extractPdf(file: File): Promise<ExtractedReport> {
   const buffer = await file.arrayBuffer();
+  const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) });
   let doc;
   try {
-    doc = await pdfjs.getDocument({ data: buffer }).promise;
+    doc = await loadingTask.promise;
   } catch {
     throw new ExtractionError("This PDF could not be opened. It may be corrupted or password-protected.");
   }
+  try {
+    return await readPdf(file, doc);
+  } finally {
+    try { await loadingTask.destroy(); } catch { /* ignore cleanup errors */ }
+  }
+}
+
+async function readPdf(file: File, doc: Awaited<ReturnType<typeof pdfjs.getDocument>["promise"]>): Promise<ExtractedReport> {
 
   const totalPages = doc.numPages;
   const pagesToRead = Math.min(totalPages, MAX_PAGES);
@@ -107,7 +116,6 @@ async function extractPdf(file: File): Promise<ExtractedReport> {
     }
   }
 
-  await doc.destroy();
   return { fileName: file.name, fileType: "pdf", pages, images, truncated, totalPages };
 }
 
