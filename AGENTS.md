@@ -6,3 +6,4 @@
 - Keep environment-specific public database settings in ignored local mode files, because development and production must be able to target separate projects without committing credentials.
 - Serve admin reporting aggregates through a security-definer database function that verifies the authenticated admin role, because admin reports must not expose private account or health-profile rows to clients.
 - Send and read private messages through narrowly scoped authenticated database functions that derive the sender from `auth.uid()`, because client-provided identities cannot establish message ownership.
+- Keep Vercel serverless handlers under the root `api/` directory and use user-scoped publishable-key clients, because server endpoints must preserve authenticated ownership and database policies without exposing privileged credentials.
