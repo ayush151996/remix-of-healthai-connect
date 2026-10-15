@@ -1,5 +1,5 @@
-import { handleReportAnalysis } from "./_lib/reportAnalysis";
-import type { ApiRequest, ApiResponse } from "./_lib/http";
+import { handleReportAnalysis } from "../src/server/vercel-report-analysis";
+import type { ApiRequest, ApiResponse } from "../src/server/vercel-http";
 
 export const config = { api: { bodyParser: { sizeLimit: "4mb" } }, maxDuration: 60 };
 
