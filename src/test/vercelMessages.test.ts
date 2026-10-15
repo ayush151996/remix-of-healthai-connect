@@ -26,6 +26,7 @@ function responseHarness() {
     json(body) {
       payload = body;
     },
+    end() {},
     setHeader(name, value) {
       headers[name] = value;
     },
@@ -43,7 +44,9 @@ describe("Vercel private messaging endpoint", () => {
       data: { user: { id: "patient-1" }, session: { access_token: "session-token" } },
       error: null,
     });
-    fakeClient.rpc.mockResolvedValue({ data: [{ id: "message-1" }], error: null });
+    fakeClient.rpc.mockImplementation((name: string) => Promise.resolve(name === "send_patient_message"
+      ? { data: "message-uuid", error: null }
+      : { data: [{ id: "message-1" }], error: null }));
   });
 
   it("returns only the authenticated account's messages with Bearer auth", async () => {
@@ -75,7 +78,7 @@ describe("Vercel private messaging endpoint", () => {
       _recipient_id: "11111111-1111-4111-8111-111111111111",
       _body: "Hello",
     });
-    expect(result.payload).toEqual({ success: true, id: [{ id: "message-1" }] });
+    expect(result.payload).toEqual({ success: true, id: "message-uuid" });
   });
 
   it("rejects unauthenticated requests before reading messages", async () => {

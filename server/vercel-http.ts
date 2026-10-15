@@ -7,6 +7,7 @@ export interface ApiRequest {
 export interface ApiResponse {
   status(code: number): ApiResponse;
   json(body: unknown): void;
+  end(): void;
   setHeader(name: string, value: string): void;
 }
 

@@ -7,7 +7,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 export default async function messages(req: ApiRequest, res: ApiResponse): Promise<void> {
   if (!applyCors(req, res)) return;
   if (req.method === "OPTIONS") {
-    res.status(204).json({});
+    res.status(204).end();
     return;
   }
   if (req.method !== "GET" && req.method !== "POST") {

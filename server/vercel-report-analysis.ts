@@ -147,7 +147,7 @@ function decodeProviderContent(raw: unknown): unknown | null {
 export async function handleReportAnalysis(req: ApiRequest, res: ApiResponse): Promise<void> {
   if (!applyCors(req, res)) return;
   if (req.method === "OPTIONS") {
-    res.status(204).json({});
+    res.status(204).end();
     return;
   }
   if (req.method !== "POST") {
