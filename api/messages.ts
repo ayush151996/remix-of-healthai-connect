@@ -1,5 +1,5 @@
 import { authenticateRequest } from "./_lib/auth";
-import { applyCors, parseJsonBody, sendError, type ApiRequest, type ApiResponse } from "./_lib/http";
+import { applyCors, getHeader, parseJsonBody, sendError, type ApiRequest, type ApiResponse } from "./_lib/http";
 import { isValidMessageBody, MAX_MESSAGE_LENGTH } from "../src/lib/messageValidation";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -14,7 +14,7 @@ export default async function messages(req: ApiRequest, res: ApiResponse): Promi
     sendError(res, 405, "method_not_allowed", "Use GET to read messages or POST to send one.");
     return;
   }
-  if (req.method === "POST" && !(String(req.headers["content-type"] ?? "").includes("application/json"))) {
+  if (req.method === "POST" && !(getHeader(req, "content-type") ?? "").includes("application/json")) {
     sendError(res, 400, "invalid_content_type", "Request body must be JSON.");
     return;
   }
