@@ -1,5 +1,5 @@
-import { applyCors, getHeader, parseJsonBody, sendError, type ApiRequest, type ApiResponse } from "./http";
-import { authenticateRequest } from "./auth";
+import { applyCors, getHeader, parseJsonBody, sendError, type ApiRequest, type ApiResponse } from "./vercel-http";
+import { authenticateRequest } from "./vercel-auth";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "deepseek/deepseek-v4.1-flash";

@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { getHeader, type ApiRequest } from "./http";
+import { getHeader, type ApiRequest } from "./vercel-http";
 
 type AuthResult =
   | { client: SupabaseClient; userId: string; error?: never }
