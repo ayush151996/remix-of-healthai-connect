@@ -177,7 +177,7 @@ export async function handleReportAnalysis(req: ApiRequest, res: ApiResponse): P
   }
   const auth = await authenticateRequest(req);
   if (auth.error) {
-    sendError(res, auth.error.status, auth.error.code, "Please sign in to analyze a report.");
+    sendError(res, auth.error.status, auth.error.code, auth.error.message);
     return;
   }
   if (!checkRateLimit(auth.userId)) {
