@@ -42,6 +42,12 @@ interface AnalysisMeta {
 
 type Phase = "idle" | "extracting" | "analyzing";
 
+function shouldUseVercelAnalysisApi(): boolean {
+  if (import.meta.env.VITE_REPORT_ANALYSIS_API === "vercel") return true;
+  if (import.meta.env.VITE_REPORT_ANALYSIS_API === "cloud") return false;
+  return window.location.hostname.endsWith(".vercel.app");
+}
+
 export default function ReportAnalyzerPage() {
   const [reportType, setReportType] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -83,23 +89,54 @@ export default function ReportAnalyzerPage() {
 
     setPhase("analyzing");
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("analyze-report", {
-        body: {
-          fileName: extracted.fileName,
-          fileType: extracted.fileType,
-          reportTypeHint: reportType || null,
-          pages: extracted.pages,
-          images: extracted.images,
-          truncated: extracted.truncated,
-        },
-      });
+      const requestBody = {
+        fileName: extracted.fileName,
+        fileType: extracted.fileType,
+        reportTypeHint: reportType || null,
+        pages: extracted.pages,
+        images: extracted.images,
+        truncated: extracted.truncated,
+      };
 
-      if (fnError) {
+      let data: { success?: boolean; analysis?: Analysis; meta?: AnalysisMeta; error?: { code?: string; message?: string } } | null = null;
+      let functionError: { context?: Response } | null = null;
+
+      if (shouldUseVercelAnalysisApi()) {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !sessionData.session?.access_token) {
+          setError("Please sign in again before analyzing a report.");
+          setRetryable(false);
+          setPhase("idle");
+          return;
+        }
+
+        const response = await fetch("/api/analyze-report", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+          body: JSON.stringify(requestBody),
+        });
+        data = await response.json().catch(() => null);
+        if (!response.ok) {
+          setError(data?.error?.message ?? "The analysis could not be completed. Please try again.");
+          setRetryable(response.status !== 401 && data?.error?.code !== "missing_configuration");
+          setPhase("idle");
+          return;
+        }
+      } else {
+        const result = await supabase.functions.invoke("analyze-report", { body: requestBody });
+        data = result.data;
+        functionError = result.error;
+      }
+
+      if (functionError) {
         let message = "The analysis could not be completed. Please try again.";
         let canRetry = true;
         try {
-          const body = typeof fnError === "object" && "context" in fnError
-            ? await (fnError as { context: Response }).context.json()
+          const body = functionError.context
+            ? await functionError.context.json()
             : null;
           if (body?.error?.message) message = body.error.message;
           if (body?.error?.code === "missing_configuration") canRetry = false;

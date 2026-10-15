@@ -1,5 +1,5 @@
-import { applyCors, getHeader, parseJsonBody, sendError, type ApiRequest, type ApiResponse } from "./http";
-import { authenticateRequest } from "./auth";
+import { applyCors, getHeader, parseJsonBody, sendError, type ApiRequest, type ApiResponse } from "./vercel-http";
+import { authenticateRequest } from "./vercel-auth";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "deepseek/deepseek-v4.1-flash";
@@ -147,7 +147,7 @@ function decodeProviderContent(raw: unknown): unknown | null {
 export async function handleReportAnalysis(req: ApiRequest, res: ApiResponse): Promise<void> {
   if (!applyCors(req, res)) return;
   if (req.method === "OPTIONS") {
-    res.status(204).json({});
+    res.status(204).end();
     return;
   }
   if (req.method !== "POST") {
@@ -177,7 +177,7 @@ export async function handleReportAnalysis(req: ApiRequest, res: ApiResponse): P
   }
   const auth = await authenticateRequest(req);
   if (auth.error) {
-    sendError(res, auth.error.status, auth.error.code, "Please sign in to analyze a report.");
+    sendError(res, auth.error.status, auth.error.code, auth.error.message);
     return;
   }
   if (!checkRateLimit(auth.userId)) {
