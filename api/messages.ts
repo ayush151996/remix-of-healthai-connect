@@ -1,5 +1,5 @@
-import { authenticateRequest } from "../src/server/vercel-auth";
-import { applyCors, getHeader, parseJsonBody, sendError, type ApiRequest, type ApiResponse } from "../src/server/vercel-http";
+import { authenticateRequest } from "../server/vercel-auth";
+import { applyCors, getHeader, parseJsonBody, sendError, type ApiRequest, type ApiResponse } from "../server/vercel-http";
 import { isValidMessageBody, MAX_MESSAGE_LENGTH } from "../src/lib/messageValidation";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
