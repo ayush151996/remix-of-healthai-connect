@@ -4,4 +4,5 @@
 - [x] Add role-checked Admin reports for account and patient-profile activity across selectable timelines, with CSV export and transparent limits for unsaved appointment/report activity.
 - [x] Build private patient messaging with inbox notifications, patient and Admin recipients, searchable directory plus email lookup, and phone visibility only for Admin while composing.
 - [x] Add Vercel serverless report analysis and authenticated GET/POST messaging endpoints while retaining Lovable Cloud preview behavior.
+- [x] Document local OpenRouter environment setup and practical Vercel endpoint smoke tests.
 - [ ] Enable email alerts for messages after the project sender domain is configured and verified.
