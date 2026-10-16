@@ -60,7 +60,8 @@ key is required or accepted.
   characters); the sender is always taken from the authenticated session.
 - Authentication: `Authorization: Basic <base64(email:password)>` or
   `Authorization: Bearer <access-token>`. Basic authentication sends the password for each
-  request, so use HTTPS only. The API does not return or store the sign-in token.
+  request, so use HTTPS only and never call it from browser code; prefer Bearer tokens for
+  integrations. The API does not return or store the sign-in token.
 
 Example requests (replace the placeholders locally; do not paste credentials into shared logs):
 
@@ -81,8 +82,8 @@ curl -u you@example.com \
    `VITE_SUPABASE_PUBLISHABLE_KEY` in Vercel's environment settings. Set
    `VITE_REPORT_ANALYSIS_API=vercel` if the site uses a custom domain.
 4. For local Vercel testing, copy `.env.example` to `.env.local`, fill in the required values,
-   then run `npx vercel dev`. `.env.local` is ignored by Git; do not put the real OpenRouter key
-   in `.env.example`, a `VITE_` variable, or frontend source.
+   set `VITE_REPORT_ANALYSIS_API=vercel`, then run `npx vercel dev`. `.env.local` is ignored by
+   Git; do not put the real OpenRouter key in `.env.example`, a `VITE_` variable, or frontend source.
 5. Upload a synthetic or anonymized report and confirm the returned analysis reflects its contents.
 
 ## Verifying key safety
