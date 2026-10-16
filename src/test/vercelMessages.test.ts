@@ -90,6 +90,16 @@ describe("Vercel private messaging endpoint", () => {
     expect(result.headers["WWW-Authenticate"]).toContain("Basic");
   });
 
+  it("requires HTTPS before accepting Basic credentials", async () => {
+    const result = responseHarness();
+    const encoded = Buffer.from("patient@example.com:secret-password").toString("base64");
+    await messages({ method: "GET", headers: { authorization: `Basic ${encoded}`, host: "health.example" } }, result.response);
+
+    expect(result.statusCode).toBe(426);
+    expect(fakeClient.auth.signInWithPassword).not.toHaveBeenCalled();
+    expect(fakeClient.rpc).not.toHaveBeenCalled();
+  });
+
   it("rejects invalid recipients and message lengths", async () => {
     const result = responseHarness();
     await messages({

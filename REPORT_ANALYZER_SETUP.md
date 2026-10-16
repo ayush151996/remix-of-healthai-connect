@@ -65,9 +65,9 @@ key is required or accepted.
 Example requests (replace the placeholders locally; do not paste credentials into shared logs):
 
 ```sh
-curl -u 'you@example.com:YOUR_PASSWORD' https://YOUR_DOMAIN/api/messages
+curl -u you@example.com https://YOUR_DOMAIN/api/messages
 
-curl -u 'you@example.com:YOUR_PASSWORD' \
+curl -u you@example.com \
   -H 'Content-Type: application/json' \
   -d '{"recipient_id":"RECIPIENT_ACCOUNT_UUID","body":"Hello"}' \
   https://YOUR_DOMAIN/api/messages
