@@ -66,7 +66,7 @@ describe("Vercel private messaging endpoint", () => {
     const encoded = Buffer.from("patient@example.com:secret-password").toString("base64");
     const request: ApiRequest = {
       method: "POST",
-      headers: { authorization: `Basic ${encoded}`, "content-type": "application/json" },
+      headers: { authorization: `Basic ${encoded}`, "content-type": "application/json", "x-forwarded-proto": "https" },
       body: { recipient_id: "11111111-1111-4111-8111-111111111111", body: "  Hello  " },
     };
 
@@ -88,6 +88,16 @@ describe("Vercel private messaging endpoint", () => {
     expect(result.statusCode).toBe(401);
     expect(fakeClient.rpc).not.toHaveBeenCalled();
     expect(result.headers["WWW-Authenticate"]).toContain("Basic");
+  });
+
+  it("requires HTTPS before accepting Basic credentials", async () => {
+    const result = responseHarness();
+    const encoded = Buffer.from("patient@example.com:secret-password").toString("base64");
+    await messages({ method: "GET", headers: { authorization: `Basic ${encoded}`, host: "health.example" } }, result.response);
+
+    expect(result.statusCode).toBe(426);
+    expect(fakeClient.auth.signInWithPassword).not.toHaveBeenCalled();
+    expect(fakeClient.rpc).not.toHaveBeenCalled();
   });
 
   it("rejects invalid recipients and message lengths", async () => {

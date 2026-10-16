@@ -31,6 +31,13 @@ function decodeBasicCredentials(header: string): { email: string; password: stri
   }
 }
 
+function isSecureRequest(req: ApiRequest): boolean {
+  const protocol = getHeader(req, "x-forwarded-proto")?.split(",")[0].trim().toLowerCase();
+  if (protocol === "https") return true;
+  const host = (getHeader(req, "x-forwarded-host") ?? getHeader(req, "host") ?? "").toLowerCase();
+  return protocol === "http" && (host.startsWith("localhost:") || host.startsWith("127.0.0.1:") || host.startsWith("[::1]:"));
+}
+
 export async function authenticateRequest(req: ApiRequest): Promise<AuthResult> {
   const authorization = getHeader(req, "authorization") ?? "";
   const baseClient = clientForToken();
@@ -55,6 +62,9 @@ export async function authenticateRequest(req: ApiRequest): Promise<AuthResult> 
   }
 
   if (/^Basic\s+/i.test(authorization)) {
+    if (!isSecureRequest(req)) {
+      return { error: { status: 426, code: "https_required", message: "Basic authentication requires an HTTPS connection." } };
+    }
     const credentials = decodeBasicCredentials(authorization);
     if (!credentials) {
       return { error: { status: 401, code: "authentication_required", message: "Provide a valid email and password using Basic authentication." } };

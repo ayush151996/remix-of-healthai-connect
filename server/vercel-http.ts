@@ -30,7 +30,9 @@ function isAllowedOrigin(req: ApiRequest, origin: string): boolean {
   try {
     const parsedOrigin = new URL(origin);
     const host = getHeader(req, "x-forwarded-host") ?? getHeader(req, "host");
-    const protocol = getHeader(req, "x-forwarded-proto")?.split(",")[0].trim() ?? "https";
+    const forwardedProtocol = getHeader(req, "x-forwarded-proto")?.split(",")[0].trim();
+    const isLocalhost = host?.startsWith("localhost:") || host?.startsWith("127.0.0.1:") || host?.startsWith("[::1]:");
+    const protocol = forwardedProtocol ?? (isLocalhost ? "http" : "https");
     return !!host && parsedOrigin.host === host && parsedOrigin.protocol === `${protocol}:`;
   } catch {
     return false;

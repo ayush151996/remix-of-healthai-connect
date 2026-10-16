@@ -190,7 +190,7 @@ export async function handleReportAnalysis(req: ApiRequest, res: ApiResponse): P
     return;
   }
   const validated = validateBody(body);
-  if ("error" in validated) {
+  if ("error" in validated && validated.error) {
     sendError(res, 400, "invalid_report", validated.error);
     return;
   }
