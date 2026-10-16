@@ -25,7 +25,8 @@ bundle, or any `VITE_` variable.
 ## Required configuration
 
 Configure server-side variables in Lovable Cloud secrets or Vercel's project environment settings,
-depending on where the endpoint runs:
+depending on where the endpoint runs. For local Vercel development, these OpenRouter settings can
+be placed in your ignored `.env.local` file; the actual key is not added to the shared `.env.example`.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
@@ -74,17 +75,50 @@ curl -u you@example.com \
   https://YOUR_DOMAIN/api/messages
 ```
 
-## Local development
+## Local Vercel setup and endpoint tests
 
 1. Get an OpenRouter key at https://openrouter.ai/keys.
-2. For Lovable preview, store it as `OPENROUTER_API_KEY` in Lovable Cloud secrets.
-3. For Vercel, set `OPENROUTER_API_KEY`, `VITE_SUPABASE_URL`, and
-   `VITE_SUPABASE_PUBLISHABLE_KEY` in Vercel's environment settings. Set
-   `VITE_REPORT_ANALYSIS_API=vercel` if the site uses a custom domain.
-4. For local Vercel testing, copy `.env.example` to `.env.local`, fill in the required values,
-   set `VITE_REPORT_ANALYSIS_API=vercel`, then run `npx vercel dev`. `.env.local` is ignored by
-   Git; do not put the real OpenRouter key in `.env.example`, a `VITE_` variable, or frontend source.
-5. Upload a synthetic or anonymized report and confirm the returned analysis reflects its contents.
+2. Copy `.env.example` to `.env.local` and fill in `OPENROUTER_API_KEY`, plus
+   `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. The optional OpenRouter settings
+   (`OPENROUTER_MODEL`, `OPENROUTER_HTTP_REFERER`, and `OPENROUTER_APP_NAME`) can also be set there.
+   `.env.local` is ignored by Git. Keep the key named `OPENROUTER_API_KEY`—never use a `VITE_`
+   prefix, because `VITE_` values are exposed to the browser.
+3. Set `VITE_REPORT_ANALYSIS_API=vercel` in `.env.local`, then run `npx vercel dev` from the
+   project folder. Use the local address printed by the command (usually `http://localhost:3000`).
+   Vite's `npm run dev` alone serves the website but does not run the `/api` serverless endpoints.
+4. To test `GET /api/messages`, run this and enter your account password when curl prompts:
+
+   ```sh
+   curl -i --user 'you@example.com' http://localhost:3000/api/messages
+   ```
+
+   A successful request returns `200` and a JSON `messages` list. For a local message-send test,
+   use a test recipient account UUID and a non-sensitive message:
+
+   ```sh
+   curl -i --user 'you@example.com' \
+     -H 'Content-Type: application/json' \
+     --data '{"recipient_id":"RECIPIENT_ACCOUNT_UUID","body":"Local API test"}' \
+     http://localhost:3000/api/messages
+   ```
+
+   A successful send returns `201` and the new message ID. Invalid sign-in returns `401`; sending
+   a message changes the recipient's inbox. For a deployed site, use its HTTPS URL instead of the
+   localhost URL—Basic authentication is rejected over non-HTTPS connections outside localhost.
+5. To test report analysis, sign in to the app opened by `vercel dev`, open Report Analyzer, and
+   upload a synthetic or anonymized report. A successful result confirms the Vercel endpoint,
+   account sign-in, and OpenRouter configuration are working together.
+
+The automated messaging tests use mocked account and database responses; they verify request
+validation and authentication handling without sending real messages. The local steps above are
+the smoke tests for the running Vercel endpoints. Report analysis through the Lovable Cloud preview
+was previously exercised with a synthetic lab report; the Vercel endpoint itself still needs to be
+run locally or after deployment to verify that environment's configuration.
+
+For deployment, set `OPENROUTER_API_KEY`, `VITE_SUPABASE_URL`, and
+`VITE_SUPABASE_PUBLISHABLE_KEY` in Vercel's environment settings. Set
+`VITE_REPORT_ANALYSIS_API=vercel` if the site uses a custom domain. The `.env.example` file is a
+variable-name template only; never put a real key there.
 
 ## Verifying key safety
 
